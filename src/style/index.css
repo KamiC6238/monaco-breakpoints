@@ -1,0 +1,15 @@
+.monaco-hover-breakpoint {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 100%;
+    background-color: #eabebc;
+    cursor: pointer;
+}
+
+.monaco-breakpoint {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 100%;
+    background-color: #d47d78;
+    cursor: pointer;
+}
