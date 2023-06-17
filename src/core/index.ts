@@ -55,15 +55,14 @@ export default class MonacoBreakpointPlugin {
 		});
 
 		this.editor.onMouseDown((e: IEditorMouseEvent) => {
-			if (!this.editor) return;
+			const model = this.editor?.getModel();
 
-			if (e.target.type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
-				const model = this.editor.getModel();
+			if (
+				model &&
+				e.target.type === MouseTargetType.GUTTER_GLYPH_MARGIN
+			) {
 				const { range, position } = e.target;
 				const lineNumber = position.lineNumber;
-
-				if (!model) return;
-
 				const newDecoration = {
 					range,
 					options: BREAKPOINT_OPTIONS,
@@ -73,7 +72,7 @@ export default class MonacoBreakpointPlugin {
 					this.lineNumberAndDecorationIdMap.get(lineNumber);
 
 				if (decorationId) {
-					this.editor.removeDecorations([decorationId]);
+					this.editor?.removeDecorations([decorationId]);
 					this.lineNumberAndDecorationIdMap.delete(lineNumber);
 				} else {
 					const decorationIds = model.deltaDecorations(
