@@ -2,19 +2,9 @@ import type * as monaco from 'monaco-editor';
 
 export type ModelDeltaDecoration = monaco.editor.IModelDeltaDecoration;
 export type ModelDecorationOptions = monaco.editor.IModelDecorationOptions;
-
-export type Editor = monaco.editor.IStandaloneCodeEditor;
-
-export interface IMonacoBreakpointPlugin {
-	editor: Editor;
-}
-
-export type DecorationsCollection = monaco.editor.IEditorDecorationsCollection;
-
-export type IEditorMouseEvent = monaco.editor.IEditorMouseEvent;
-
-export type IEditorMouseTarget = monaco.editor.IMouseTargetMargin;
-
+export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
+export type EditorMouseEvent = monaco.editor.IEditorMouseEvent;
+export type EditorMouseTarget = monaco.editor.IMouseTargetMargin;
 export type Range = monaco.Range;
 
 /**
@@ -25,7 +15,6 @@ export enum BreakpointEnum {
 	Hover,
 }
 
-export interface ClearDecorations {
-	ranges: Range[];
-	breakpointEnum: BreakpointEnum;
+export interface MonacoBreakpointProps {
+	editor: MonacoEditor;
 }

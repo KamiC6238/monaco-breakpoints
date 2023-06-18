@@ -1,11 +1,11 @@
 import {
 	Range,
-	Editor,
+	MonacoEditor,
 	BreakpointEnum,
-	IEditorMouseEvent,
-	IEditorMouseTarget,
+	EditorMouseEvent,
+	EditorMouseTarget,
 	ModelDeltaDecoration,
-	IMonacoBreakpointPlugin,
+	MonacoBreakpointProps,
 } from '@/types';
 
 import {
@@ -16,10 +16,10 @@ import {
 
 export default class MonacoBreakpoint {
 	private hoverDecorationId = '';
-	private editor: Editor | null = null;
+	private editor: MonacoEditor | null = null;
 	private lineNumberAndDecorationIdMap = new Map<number, string>();
 
-	constructor(params: IMonacoBreakpointPlugin) {
+	constructor(params: MonacoBreakpointProps) {
 		if (!params?.editor) {
 			throw new Error("Missing 'editor' parameter");
 		}
@@ -36,7 +36,7 @@ export default class MonacoBreakpoint {
 	}
 
 	private initMouseEvent() {
-		this.editor!.onMouseMove((e: IEditorMouseEvent) => {
+		this.editor!.onMouseMove((e: EditorMouseEvent) => {
 			const model = this.editor?.getModel();
 			const { range, detail } = this.getMouseEventTarget(e);
 
@@ -68,7 +68,7 @@ export default class MonacoBreakpoint {
 			}
 		});
 
-		this.editor!.onMouseDown((e: IEditorMouseEvent) => {
+		this.editor!.onMouseDown((e: EditorMouseEvent) => {
 			const model = this.editor?.getModel();
 			const { range, position, detail } = this.getMouseEventTarget(e);
 
@@ -111,8 +111,8 @@ export default class MonacoBreakpoint {
 		});
 	}
 
-	private getMouseEventTarget(e: IEditorMouseEvent) {
-		return { ...(e.target as IEditorMouseTarget) };
+	private getMouseEventTarget(e: EditorMouseEvent) {
+		return { ...(e.target as EditorMouseTarget) };
 	}
 
 	private clearHoverDecoration() {
