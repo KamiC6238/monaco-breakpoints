@@ -1,1 +1,2 @@
-# monaco-breakpoints-plugin
+# monaco-breakpoints
+## Support breakpoints in monaco-editor
