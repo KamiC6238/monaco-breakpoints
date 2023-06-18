@@ -1,4 +1,11 @@
-import { Editor, IEditorMouseEvent, IMonacoBreakpointPlugin } from '@/types';
+import {
+	Range,
+	Editor,
+	BreakpointEnum,
+	IEditorMouseEvent,
+	ModelDeltaDecoration,
+	IMonacoBreakpointPlugin,
+} from '@/types';
 
 import {
 	MouseTargetType,
@@ -6,7 +13,7 @@ import {
 	BREAKPOINT_HOVER_OPTIONS,
 } from '@/config';
 
-export default class MonacoBreakpointPlugin {
+export default class MonacoBreakpoint {
 	private hoverDecorationId = '';
 	private editor: Editor | null = null;
 	private lineNumberAndDecorationIdMap = new Map<number, string>();
@@ -28,33 +35,37 @@ export default class MonacoBreakpointPlugin {
 	}
 
 	private initMouseEvent() {
-		if (!this.editor) return;
-
-		this.editor.onMouseMove((e: IEditorMouseEvent) => {
+		this.editor!.onMouseMove((e: IEditorMouseEvent) => {
 			const model = this.editor?.getModel();
 
 			if (
 				model &&
 				e.target.type === MouseTargetType.GUTTER_GLYPH_MARGIN
 			) {
+				/**
+				 * clear previous hover breakpoint decoration
+				 */
 				if (this.hoverDecorationId) {
 					model.deltaDecorations([this.hoverDecorationId], []);
 				}
 
-				const newDecoration = {
-					range: e.target.range,
-					options: BREAKPOINT_HOVER_OPTIONS,
-				};
-
+				/**
+				 * create new hover breakpoint decoration
+				 */
 				const decorationIds = model.deltaDecorations(
 					[],
-					[newDecoration]
+					[
+						this.createBreakpointDecoration(
+							e.target.range,
+							BreakpointEnum.Hover
+						),
+					]
 				);
 				this.hoverDecorationId = decorationIds[0];
 			}
 		});
 
-		this.editor.onMouseDown((e: IEditorMouseEvent) => {
+		this.editor!.onMouseDown((e: IEditorMouseEvent) => {
 			const model = this.editor?.getModel();
 
 			if (
@@ -63,22 +74,32 @@ export default class MonacoBreakpointPlugin {
 			) {
 				const { range, position } = e.target;
 				const lineNumber = position.lineNumber;
-				const newDecoration = {
-					range,
-					options: BREAKPOINT_OPTIONS,
-				};
-
 				const decorationId =
 					this.lineNumberAndDecorationIdMap.get(lineNumber);
 
+				/**
+				 * If a breakpoint exists on the current line, it indicates that the current action is to remove the breakpoint
+				 */
 				if (decorationId) {
 					this.editor?.removeDecorations([decorationId]);
 					this.lineNumberAndDecorationIdMap.delete(lineNumber);
 				} else {
+					/**
+					 * If no breakpoint exists on the current line, it indicates that the current action is to add a breakpoint
+					 */
 					const decorationIds = model.deltaDecorations(
 						[],
-						[newDecoration]
+						[
+							this.createBreakpointDecoration(
+								range,
+								BreakpointEnum.Exist
+							),
+						]
 					);
+
+					/**
+					 * record the new breakpoint decoration id
+					 */
 					this.lineNumberAndDecorationIdMap.set(
 						lineNumber,
 						decorationIds[0]
@@ -86,5 +107,18 @@ export default class MonacoBreakpointPlugin {
 				}
 			}
 		});
+	}
+
+	private createBreakpointDecoration(
+		range: Range,
+		breakpointEnum: BreakpointEnum
+	): ModelDeltaDecoration {
+		return {
+			range,
+			options:
+				breakpointEnum === BreakpointEnum.Exist
+					? BREAKPOINT_OPTIONS
+					: BREAKPOINT_HOVER_OPTIONS,
+		};
 	}
 }
