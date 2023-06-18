@@ -13,6 +13,8 @@ export type DecorationsCollection = monaco.editor.IEditorDecorationsCollection;
 
 export type IEditorMouseEvent = monaco.editor.IEditorMouseEvent;
 
+export type IEditorMouseTarget = monaco.editor.IMouseTargetMargin;
+
 export type Range = monaco.Range;
 
 /**
