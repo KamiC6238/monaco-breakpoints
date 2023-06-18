@@ -38,8 +38,13 @@ export default class MonacoBreakpoint {
 		this.editor!.onMouseMove((e: IEditorMouseEvent) => {
 			const model = this.editor?.getModel();
 
+			// This indicates that the current position of the mouse is over the total number of lines in the editor
+			// @ts-ignore
+			const isAfterLines = e.target.detail.isAfterLines;
+
 			if (
 				model &&
+				!isAfterLines &&
 				e.target.type === MouseTargetType.GUTTER_GLYPH_MARGIN
 			) {
 				// clear previous hover breakpoint decoration
@@ -63,6 +68,10 @@ export default class MonacoBreakpoint {
 
 		this.editor!.onMouseDown((e: IEditorMouseEvent) => {
 			const model = this.editor?.getModel();
+			// @ts-ignore
+			const isAfterLines = e.target.detail.isAfterLines;
+			// This indicates that the current position of the mouse is over the total number of lines in the editor
+			if (isAfterLines) return;
 
 			if (
 				model &&
