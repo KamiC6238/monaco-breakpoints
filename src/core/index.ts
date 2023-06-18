@@ -42,16 +42,10 @@ export default class MonacoBreakpoint {
 				model &&
 				e.target.type === MouseTargetType.GUTTER_GLYPH_MARGIN
 			) {
-				/**
-				 * clear previous hover breakpoint decoration
-				 */
-				if (this.hoverDecorationId) {
-					model.deltaDecorations([this.hoverDecorationId], []);
-				}
+				// clear previous hover breakpoint decoration
+				this.clearHoverDecoration();
 
-				/**
-				 * create new hover breakpoint decoration
-				 */
+				// create new hover breakpoint decoration
 				const decorationIds = model.deltaDecorations(
 					[],
 					[
@@ -62,6 +56,8 @@ export default class MonacoBreakpoint {
 					]
 				);
 				this.hoverDecorationId = decorationIds[0];
+			} else {
+				this.clearHoverDecoration();
 			}
 		});
 
@@ -77,16 +73,12 @@ export default class MonacoBreakpoint {
 				const decorationId =
 					this.lineNumberAndDecorationIdMap.get(lineNumber);
 
-				/**
-				 * If a breakpoint exists on the current line, it indicates that the current action is to remove the breakpoint
-				 */
+				// If a breakpoint exists on the current line, it indicates that the current action is to remove the breakpoint
 				if (decorationId) {
 					this.editor?.removeDecorations([decorationId]);
 					this.lineNumberAndDecorationIdMap.delete(lineNumber);
 				} else {
-					/**
-					 * If no breakpoint exists on the current line, it indicates that the current action is to add a breakpoint
-					 */
+					// If no breakpoint exists on the current line, it indicates that the current action is to add a breakpoint
 					const decorationIds = model.deltaDecorations(
 						[],
 						[
@@ -97,9 +89,7 @@ export default class MonacoBreakpoint {
 						]
 					);
 
-					/**
-					 * record the new breakpoint decoration id
-					 */
+					// record the new breakpoint decoration id
 					this.lineNumberAndDecorationIdMap.set(
 						lineNumber,
 						decorationIds[0]
@@ -107,6 +97,14 @@ export default class MonacoBreakpoint {
 				}
 			}
 		});
+	}
+
+	private clearHoverDecoration() {
+		const model = this.editor?.getModel();
+
+		if (model && this.hoverDecorationId) {
+			model.deltaDecorations([this.hoverDecorationId], []);
+		}
 	}
 
 	private createBreakpointDecoration(
