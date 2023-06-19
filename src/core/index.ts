@@ -38,16 +38,15 @@ export default class MonacoBreakpoint {
 	private initMouseEvent() {
 		this.editor!.onMouseMove((e: EditorMouseEvent) => {
 			const model = this.editor?.getModel();
-			const { range, detail } = this.getMouseEventTarget(e);
+			const { range, detail, type } = this.getMouseEventTarget(e);
 
 			// This indicates that the current position of the mouse is over the total number of lines in the editor
-			const isAfterLines = detail.isAfterLines;
+			if (detail?.isAfterLines) {
+				this.clearHoverDecoration();
+				return;
+			}
 
-			if (
-				model &&
-				!isAfterLines &&
-				e.target.type === MouseTargetType.GUTTER_GLYPH_MARGIN
-			) {
+			if (model && type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
 				// remove previous hover breakpoint decoration
 				this.clearHoverDecoration();
 
@@ -70,16 +69,15 @@ export default class MonacoBreakpoint {
 
 		this.editor!.onMouseDown((e: EditorMouseEvent) => {
 			const model = this.editor?.getModel();
-			const { range, position, detail } = this.getMouseEventTarget(e);
+			const { range, position, detail, type } =
+				this.getMouseEventTarget(e);
 
-			// This indicates that the current position of the mouse is over the total number of lines in the editor
-			const isAfterLines = detail.isAfterLines;
-			if (isAfterLines) return;
+			if (model && type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
+				// This indicates that the current position of the mouse is over the total number of lines in the editor
+				if (detail.isAfterLines) {
+					return;
+				}
 
-			if (
-				model &&
-				e.target.type === MouseTargetType.GUTTER_GLYPH_MARGIN
-			) {
 				const lineNumber = position.lineNumber;
 				const decorationId =
 					this.lineNumberAndDecorationIdMap.get(lineNumber);
