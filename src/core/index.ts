@@ -1,5 +1,6 @@
 import {
 	Range,
+	Disposable,
 	MonacoEditor,
 	BreakpointEnum,
 	EditorMouseEvent,
@@ -15,9 +16,14 @@ import {
 } from '@/config';
 
 export default class MonacoBreakpoint {
+	// private previousLineCount = 0;
 	private hoverDecorationId = '';
 	private editor: MonacoEditor | null = null;
 	private lineNumberAndDecorationIdMap = new Map<number, string>();
+
+	private mouseMoveDisposable: Disposable | null = null;
+	private mouseDownDisposable: Disposable | null = null;
+	private contentChangedDisposable: Disposable | null = null;
 
 	constructor(params: MonacoBreakpointProps) {
 		if (!params?.editor) {
@@ -33,81 +39,91 @@ export default class MonacoBreakpoint {
 
 		this.editor = editor;
 		this.initMouseEvent();
+		// this.initEditorEvent();
+		// this.previousLineCount = editor.getModel()?.getLineCount() ?? 0;
 	}
 
 	private initMouseEvent() {
-		this.editor!.onMouseMove((e: EditorMouseEvent) => {
-			const model = this.editor?.getModel();
-			const { range, detail, type } = this.getMouseEventTarget(e);
+		this.mouseMoveDisposable = this.editor!.onMouseMove(
+			(e: EditorMouseEvent) => {
+				const model = this.editor?.getModel();
+				const { range, detail, type } = this.getMouseEventTarget(e);
 
-			// This indicates that the current position of the mouse is over the total number of lines in the editor
-			if (detail?.isAfterLines) {
-				this.clearHoverDecoration();
-				return;
-			}
-
-			if (model && type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
-				// remove previous hover breakpoint decoration
-				this.clearHoverDecoration();
-
-				// create new hover breakpoint decoration
-				const newDecoration = this.createBreakpointDecoration(
-					range,
-					BreakpointEnum.Hover
-				);
-				// render decoration
-				const decorationIds = model.deltaDecorations(
-					[],
-					[newDecoration]
-				);
-				// record the hover decoraion id
-				this.hoverDecorationId = decorationIds[0];
-			} else {
-				this.clearHoverDecoration();
-			}
-		});
-
-		this.editor!.onMouseDown((e: EditorMouseEvent) => {
-			const model = this.editor?.getModel();
-			const { range, position, detail, type } =
-				this.getMouseEventTarget(e);
-
-			if (model && type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
 				// This indicates that the current position of the mouse is over the total number of lines in the editor
-				if (detail.isAfterLines) {
+				if (detail?.isAfterLines) {
+					this.clearHoverDecoration();
 					return;
 				}
 
-				const lineNumber = position.lineNumber;
-				const decorationId =
-					this.lineNumberAndDecorationIdMap.get(lineNumber);
+				if (model && type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
+					// remove previous hover breakpoint decoration
+					this.clearHoverDecoration();
 
-				// If a breakpoint exists on the current line, it indicates that the current action is to remove the breakpoint
-				if (decorationId) {
-					this.editor?.removeDecorations([decorationId]);
-					this.lineNumberAndDecorationIdMap.delete(lineNumber);
-				} else {
-					// If no breakpoint exists on the current line, it indicates that the current action is to add a breakpoint
-					// create breakpoint decoration
+					// create new hover breakpoint decoration
 					const newDecoration = this.createBreakpointDecoration(
 						range,
-						BreakpointEnum.Exist
+						BreakpointEnum.Hover
 					);
 					// render decoration
 					const decorationIds = model.deltaDecorations(
 						[],
 						[newDecoration]
 					);
-
-					// record the new breakpoint decoration id
-					this.lineNumberAndDecorationIdMap.set(
-						lineNumber,
-						decorationIds[0]
-					);
+					// record the hover decoraion id
+					this.hoverDecorationId = decorationIds[0];
+				} else {
+					this.clearHoverDecoration();
 				}
 			}
-		});
+		);
+
+		this.mouseDownDisposable = this.editor!.onMouseDown(
+			(e: EditorMouseEvent) => {
+				const model = this.editor?.getModel();
+				const { range, position, detail, type } =
+					this.getMouseEventTarget(e);
+
+				if (model && type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
+					// This indicates that the current position of the mouse is over the total number of lines in the editor
+					if (detail.isAfterLines) {
+						return;
+					}
+
+					const lineNumber = position.lineNumber;
+					const decorationId =
+						this.lineNumberAndDecorationIdMap.get(lineNumber);
+
+					// If a breakpoint exists on the current line, it indicates that the current action is to remove the breakpoint
+					if (decorationId) {
+						this.editor?.removeDecorations([decorationId]);
+						this.lineNumberAndDecorationIdMap.delete(lineNumber);
+					} else {
+						// If no breakpoint exists on the current line, it indicates that the current action is to add a breakpoint
+						// create breakpoint decoration
+						const newDecoration = this.createBreakpointDecoration(
+							range,
+							BreakpointEnum.Exist
+						);
+						// render decoration
+						const decorationIds = model.deltaDecorations(
+							[],
+							[newDecoration]
+						);
+
+						// record the new breakpoint decoration id
+						this.lineNumberAndDecorationIdMap.set(
+							lineNumber,
+							decorationIds[0]
+						);
+					}
+				}
+			}
+		);
 	}
+
+	// private initEditorEvent() {
+	//     this.contentChangedDisposable = this.editor!.onDidChangeModelContent(() => {});
+	// }
 
 	private getMouseEventTarget(e: EditorMouseEvent) {
 		return { ...(e.target as EditorMouseTarget) };
@@ -118,7 +134,21 @@ export default class MonacoBreakpoint {
 
 		if (model && this.hoverDecorationId) {
 			model.deltaDecorations([this.hoverDecorationId], []);
+			this.hoverDecorationId = '';
 		}
+	}
+
+	private clearAllDecorations() {
+		const decorationsId = [];
+		const model = this.editor?.getModel();
+
+		for (let [_, decorationId] of this.lineNumberAndDecorationIdMap) {
+			decorationsId.push(decorationId);
+		}
+
+		// clear all rendered breakpoint decoration
+		model?.deltaDecorations(decorationsId, []);
+		this.clearHoverDecoration();
 	}
 
 	private createBreakpointDecoration(
@@ -132,5 +162,14 @@ export default class MonacoBreakpoint {
 					? BREAKPOINT_OPTIONS
 					: BREAKPOINT_HOVER_OPTIONS,
 		};
+	}
+
+	dispose() {
+		this.editor = null;
+		this.clearAllDecorations();
+		this.mouseMoveDisposable?.dispose();
+		this.mouseDownDisposable?.dispose();
+		this.contentChangedDisposable?.dispose();
+		this.lineNumberAndDecorationIdMap.clear();
 	}
 }
