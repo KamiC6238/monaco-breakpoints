@@ -40,13 +40,12 @@ export default class MonacoBreakpoint {
 		this.editor = editor;
 		this.initMouseEvent();
 		// this.initEditorEvent();
-		// this.previousLineCount = editor.getModel()?.getLineCount() ?? 0;
 	}
 
 	private initMouseEvent() {
 		this.mouseMoveDisposable = this.editor!.onMouseMove(
 			(e: EditorMouseEvent) => {
-				const model = this.editor?.getModel();
+				const model = this.getModel();
 				const { range, detail, type } = this.getMouseEventTarget(e);
 
 				// This indicates that the current position of the mouse is over the total number of lines in the editor
@@ -79,7 +78,7 @@ export default class MonacoBreakpoint {
 
 		this.mouseDownDisposable = this.editor!.onMouseDown(
 			(e: EditorMouseEvent) => {
-				const model = this.editor?.getModel();
+				const model = this.getModel();
 				const { range, position, detail, type } =
 					this.getMouseEventTarget(e);
 
@@ -122,7 +121,25 @@ export default class MonacoBreakpoint {
 	}
 
 	// private initEditorEvent() {
-	//     this.contentChangedDisposable = this.editor!.onDidChangeModelContent(() => {});
+	// 	this.previousLineCount = this.getLineCount();
+	// 	this.contentChangedDisposable = this.editor!.onDidChangeModelContent(
+	// 		() => {
+	// 			const currentLineCount = this.getLineCount();
+	// 			const isLineCountChanged =
+	// 				currentLineCount !== this.previousLineCount;
+
+	// 			if (isLineCountChanged) {
+	// 				/**
+	// 				 * 1. 光标在行头回车
+	// 				 * 2. 光标在行尾回车
+	// 				 * 3. 光标在行中回车
+	// 				 * 4. 粘贴代码
+	// 				 *
+	// 				 * 需要针对这四种情况对断点进行重新渲染，预期效果参考 vscode
+	// 				 */
+	// 			}
+	// 		}
+	// 	);
 	// }
 
 	private getMouseEventTarget(e: EditorMouseEvent) {
@@ -130,7 +147,7 @@ export default class MonacoBreakpoint {
 	}
 
 	private clearHoverDecoration() {
-		const model = this.editor?.getModel();
+		const model = this.getModel();
 
 		if (model && this.hoverDecorationId) {
 			model.deltaDecorations([this.hoverDecorationId], []);
@@ -140,7 +157,7 @@ export default class MonacoBreakpoint {
 
 	private clearAllDecorations() {
 		const decorationsId = [];
-		const model = this.editor?.getModel();
+		const model = this.getModel();
 
 		for (let [_, decorationId] of this.lineNumberAndDecorationIdMap) {
 			decorationsId.push(decorationId);
@@ -163,6 +180,14 @@ export default class MonacoBreakpoint {
 					: BREAKPOINT_HOVER_OPTIONS,
 		};
 	}
+
+	private getModel() {
+		return this.editor?.getModel();
+	}
+
+	// private getLineCount() {
+	// 	return this.getModel()?.getLineCount() ?? 0;
+	// }
 
 	dispose() {
 		this.editor = null;
