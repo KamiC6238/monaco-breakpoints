@@ -1,29 +1,24 @@
 import {
-	Range,
 	Disposable,
 	MonacoEditor,
 	BreakpointEnum,
 	EditorMouseEvent,
-	EditorMouseTarget,
-	ModelDeltaDecoration,
 	MonacoBreakpointProps,
 } from '@/types';
 
-import {
-	MouseTargetType,
-	BREAKPOINT_OPTIONS,
-	BREAKPOINT_HOVER_OPTIONS,
-} from '@/config';
+import { MouseTargetType, BREAKPOINT_OPTIONS } from '@/config';
+import { getMouseEventTarget, createBreakpointDecoration } from '@/utils';
 
 export default class MonacoBreakpoint {
-	// private previousLineCount = 0;
+	private previousLineCount = 0;
 	private hoverDecorationId = '';
 	private editor: MonacoEditor | null = null;
-	private lineNumberAndDecorationIdMap = new Map<number, string>();
 
 	private mouseMoveDisposable: Disposable | null = null;
 	private mouseDownDisposable: Disposable | null = null;
 	private contentChangedDisposable: Disposable | null = null;
+
+	private lineNumberAndDecorationIdMap = new Map<number, string>();
 
 	constructor(params: MonacoBreakpointProps) {
 		if (!params?.editor) {
@@ -39,14 +34,14 @@ export default class MonacoBreakpoint {
 
 		this.editor = editor;
 		this.initMouseEvent();
-		// this.initEditorEvent();
+		this.initEditorEvent();
 	}
 
 	private initMouseEvent() {
 		this.mouseMoveDisposable = this.editor!.onMouseMove(
 			(e: EditorMouseEvent) => {
 				const model = this.getModel();
-				const { range, detail, type } = this.getMouseEventTarget(e);
+				const { range, detail, type } = getMouseEventTarget(e);
 
 				// This indicates that the current position of the mouse is over the total number of lines in the editor
 				if (detail?.isAfterLines) {
@@ -59,7 +54,7 @@ export default class MonacoBreakpoint {
 					this.clearHoverDecoration();
 
 					// create new hover breakpoint decoration
-					const newDecoration = this.createBreakpointDecoration(
+					const newDecoration = createBreakpointDecoration(
 						range,
 						BreakpointEnum.Hover
 					);
@@ -80,7 +75,7 @@ export default class MonacoBreakpoint {
 			(e: EditorMouseEvent) => {
 				const model = this.getModel();
 				const { range, position, detail, type } =
-					this.getMouseEventTarget(e);
+					getMouseEventTarget(e);
 
 				if (model && type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
 					// This indicates that the current position of the mouse is over the total number of lines in the editor
@@ -99,7 +94,7 @@ export default class MonacoBreakpoint {
 					} else {
 						// If no breakpoint exists on the current line, it indicates that the current action is to add a breakpoint
 						// create breakpoint decoration
-						const newDecoration = this.createBreakpointDecoration(
+						const newDecoration = createBreakpointDecoration(
 							range,
 							BreakpointEnum.Exist
 						);
@@ -120,30 +115,46 @@ export default class MonacoBreakpoint {
 		);
 	}
 
-	// private initEditorEvent() {
-	// 	this.previousLineCount = this.getLineCount();
-	// 	this.contentChangedDisposable = this.editor!.onDidChangeModelContent(
-	// 		() => {
-	// 			const currentLineCount = this.getLineCount();
-	// 			const isLineCountChanged =
-	// 				currentLineCount !== this.previousLineCount;
+	private initEditorEvent() {
+		this.previousLineCount = this.getLineCount();
+		this.contentChangedDisposable = this.editor!.onDidChangeModelContent(
+			() => {
+				const currentLineCount = this.getLineCount();
+				const isLineCountChanged =
+					currentLineCount !== this.previousLineCount;
 
-	// 			if (isLineCountChanged) {
-	// 				/**
-	// 				 * 1. 光标在行头回车
-	// 				 * 2. 光标在行尾回车
-	// 				 * 3. 光标在行中回车
-	// 				 * 4. 粘贴代码
-	// 				 *
-	// 				 * 需要针对这四种情况对断点进行重新渲染，预期效果参考 vscode
-	// 				 */
-	// 			}
-	// 		}
-	// 	);
-	// }
+				if (isLineCountChanged) {
+					console.log(this.getAllDecorations());
+					/**
+					 * 1. 光标在行头回车
+					 * 2. 光标在行尾回车
+					 * 3. 光标在行中回车
+					 * 4. 粘贴代码
+					 * 5. 撤销代码
+					 *
+					 * 需要针对这上述情况对断点进行重新渲染，预期效果参考 vscode
+					 */
+				}
+			}
+		);
+	}
 
-	private getMouseEventTarget(e: EditorMouseEvent) {
-		return { ...(e.target as EditorMouseTarget) };
+	private getModel() {
+		return this.editor?.getModel();
+	}
+
+	private getLineCount() {
+		return this.getModel()?.getLineCount() ?? 0;
+	}
+
+	private getAllDecorations() {
+		return this.getModel()
+			?.getAllMarginDecorations()
+			?.filter(
+				(decoration) =>
+					decoration.options.glyphMarginClassName ===
+					BREAKPOINT_OPTIONS.glyphMarginClassName
+			);
 	}
 
 	private clearHoverDecoration() {
@@ -167,27 +178,6 @@ export default class MonacoBreakpoint {
 		model?.deltaDecorations(decorationsId, []);
 		this.clearHoverDecoration();
 	}
-
-	private createBreakpointDecoration(
-		range: Range,
-		breakpointEnum: BreakpointEnum
-	): ModelDeltaDecoration {
-		return {
-			range,
-			options:
-				breakpointEnum === BreakpointEnum.Exist
-					? BREAKPOINT_OPTIONS
-					: BREAKPOINT_HOVER_OPTIONS,
-		};
-	}
-
-	private getModel() {
-		return this.editor?.getModel();
-	}
-
-	// private getLineCount() {
-	// 	return this.getModel()?.getLineCount() ?? 0;
-	// }
 
 	dispose() {
 		this.editor = null;
