@@ -124,7 +124,6 @@ export default class MonacoBreakpoint {
 					currentLineCount !== this.previousLineCount;
 
 				if (isLineCountChanged) {
-					console.log(this.getAllDecorations());
 					/**
 					 * 1. 光标在行头回车
 					 * 2. 光标在行尾回车
