@@ -1,3 +1,3 @@
 # monaco-breakpoints
 
-## Support breakpoints in monaco-editor like VSCODE
+## Support breakpoints in monaco-editor like vscode
