@@ -1,7 +1,5 @@
 import * as monaco from 'monaco-editor';
 
-console.log(monaco);
-
 export function createEditor(id: string) {
 	const element = document.getElementById(id);
 

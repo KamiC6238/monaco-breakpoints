@@ -1,10 +1,14 @@
 import type * as monaco from 'monaco-editor';
 
-export type Range = monaco.Range;
+export type Range = monaco.IRange;
+export type Position = monaco.IPosition;
 export type Disposable = monaco.IDisposable;
 export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
+
 export type EditorMouseEvent = monaco.editor.IEditorMouseEvent;
 export type EditorMouseTarget = monaco.editor.IMouseTargetMargin;
+
+export type ModelDecoration = monaco.editor.IModelDecoration;
 export type ModelDeltaDecoration = monaco.editor.IModelDeltaDecoration;
 export type ModelDecorationOptions = monaco.editor.IModelDecorationOptions;
 
