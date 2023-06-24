@@ -3,12 +3,16 @@ import {
 	Disposable,
 	MonacoEditor,
 	BreakpointEnum,
+	ModelDecoration,
 	EditorMouseEvent,
 	MonacoBreakpointProps,
-	ModelDecoration
 } from '@/types';
 
-import { MouseTargetType, BREAKPOINT_OPTIONS } from '@/config';
+import {
+	MouseTargetType,
+	CursorChangeReason,
+	BREAKPOINT_OPTIONS
+} from '@/config';
 import { getMouseEventTarget, createBreakpointDecoration } from '@/utils';
 
 export default class MonacoBreakpoint {
@@ -16,9 +20,13 @@ export default class MonacoBreakpoint {
 	private hoverDecorationId = '';
 	private editor: MonacoEditor | null = null;
 	
+	private isUndoing = false;
+	private isLineCountChanged = false;
+
 	private mouseMoveDisposable: Disposable | null = null;
 	private mouseDownDisposable: Disposable | null = null;
 	private contentChangedDisposable: Disposable | null = null;
+	private cursorPositionChangedDisposable: Disposable | null = null;
 
 	private decorationIdAndRangeMap = new Map<string, Range>();
 	private lineNumberAndDecorationIdMap = new Map<number, string>();
@@ -41,6 +49,7 @@ export default class MonacoBreakpoint {
 	}
 
 	private initMouseEvent() {
+		this.mouseMoveDisposable?.dispose();
 		this.mouseMoveDisposable = this.editor!.onMouseMove(
 			(e: EditorMouseEvent) => {
 				const model = this.getModel();
@@ -74,6 +83,7 @@ export default class MonacoBreakpoint {
 			}
 		);
 
+		this.mouseDownDisposable?.dispose();
 		this.mouseDownDisposable = this.editor!.onMouseDown(
 			(e: EditorMouseEvent) => {
 				const model = this.getModel();
@@ -105,36 +115,40 @@ export default class MonacoBreakpoint {
 
 	private initEditorEvent() {
 		this.preLineCount = this.getLineCount();
+
+		this.contentChangedDisposable?.dispose();
 		this.contentChangedDisposable = this.editor!.onDidChangeModelContent((e) => {
-			const model = this.getModel();
-			const isUndoing = e.isUndoing;
 			const curLineCount = this.getLineCount();
-			const decorations = this.getAllDecorations();
-			const isLineCountChanged = curLineCount !== this.preLineCount;
+
+			this.isUndoing = e.isUndoing;
+			this.isLineCountChanged = curLineCount !== this.preLineCount;
 			this.preLineCount = curLineCount;
+		});
 
-			/**
-			 * 1. 光标在行头回车 - 完成
-			 * 2. 光标在行尾回车 - 完成
-			 * 3. 光标在行中回车 - 完成
-			 * 4. 粘贴代码
-			 * 5. 撤销代码
-			 *
-			 * 需要针对这上述情况对断点进行重新渲染，预期效果参考 vscode
-			 */
+		this.cursorPositionChangedDisposable?.dispose();
+		this.cursorPositionChangedDisposable = this.editor!.onDidChangeCursorPosition(e => {
+			const model = this.getModel();
+			const decorations = this.getAllDecorations();
 
-			if (model && isLineCountChanged) {
+			if (model && this.isLineCountChanged) {
 				for (let decoration of decorations) {
 					const curRange = decoration.range;
 					const preRange = this.decorationIdAndRangeMap.get(decoration.id);
 
-					if (!isUndoing) {
+					if (!this.isUndoing) {
 						if (curRange.startLineNumber === curRange.endLineNumber) {
 							this.replaceSpecifyLineNumberAndIdMap(curRange, decoration);
 						} else if (preRange) {
-							// range.endColumn always === lineLength + 1
-							const preLineLength = model.getLineLength(preRange.startLineNumber) + 1;
-							const lineBreakInHead = preLineLength === 1;
+							const isPaste = e.reason === CursorChangeReason.Paste;
+							const lineBreakInHead =
+								!isPaste &&
+								preRange.endColumn === curRange.endColumn &&
+								preRange.endLineNumber !== curRange.endLineNumber &&
+								preRange.startLineNumber === curRange.startLineNumber;
+
+							/**
+							 * FIXME: 在首行粘贴代码时断点位置不正确
+							 */
 
 							this.removeSpecifyDecoration(decoration.id, preRange.startLineNumber);
 							this.createSpecifyDecoration({
@@ -158,6 +172,9 @@ export default class MonacoBreakpoint {
 					this.decorationIdAndRangeMap.set(decoration.id, decoration.range);
 				}
 			}
+
+			this.isUndoing = false;
+			this.isLineCountChanged = false;
 		});
 	}
 
@@ -270,11 +287,17 @@ export default class MonacoBreakpoint {
 
 	dispose() {
 		this.editor = null;
+		this.preLineCount = 0;
+		this.isUndoing = false;
+		this.hoverDecorationId = '';
+		this.isLineCountChanged = false;
+
 		this.removeAllDecorations();
 
 		this.mouseMoveDisposable?.dispose();
 		this.mouseDownDisposable?.dispose();
 		this.contentChangedDisposable?.dispose();
+		this.cursorPositionChangedDisposable?.dispose();
 
 		this.decorationIdAndRangeMap.clear();
 		this.lineNumberAndDecorationIdMap.clear();
