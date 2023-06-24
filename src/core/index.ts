@@ -147,7 +147,7 @@ export default class MonacoBreakpoint {
 								preRange.startLineNumber === curRange.startLineNumber;
 
 							/**
-							 * FIXME: 在首行粘贴代码时断点位置不正确
+							 * FIXME: 在光标处于行头时粘贴代码时断点位置不正确
 							 */
 
 							this.removeSpecifyDecoration(decoration.id, preRange.startLineNumber);
