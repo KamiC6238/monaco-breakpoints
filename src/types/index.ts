@@ -4,10 +4,10 @@ export type Range = monaco.IRange;
 export type Position = monaco.IPosition;
 export type Disposable = monaco.IDisposable;
 export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
-export type CursorChangeReason = monaco.editor.CursorChangeReason;
 
 export type EditorMouseEvent = monaco.editor.IEditorMouseEvent;
 export type EditorMouseTarget = monaco.editor.IMouseTargetMargin;
+export type CursorPositionChangedEvent = monaco.editor.ICursorPositionChangedEvent;
 
 export type ModelDecoration = monaco.editor.IModelDecoration;
 export type ModelDeltaDecoration = monaco.editor.IModelDeltaDecoration;

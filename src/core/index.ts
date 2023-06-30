@@ -1,11 +1,13 @@
 import {
 	Range,
+	Position,
 	Disposable,
 	MonacoEditor,
 	BreakpointEnum,
 	ModelDecoration,
 	EditorMouseEvent,
 	MonacoBreakpointProps,
+	CursorPositionChangedEvent
 } from '@/types';
 
 import {
@@ -22,6 +24,7 @@ export default class MonacoBreakpoint {
 	
 	private isUndoing = false;
 	private isLineCountChanged = false;
+	private lineContent: string | null = null;
 
 	private mouseMoveDisposable: Disposable | null = null;
 	private mouseDownDisposable: Disposable | null = null;
@@ -139,16 +142,7 @@ export default class MonacoBreakpoint {
 						if (curRange.startLineNumber === curRange.endLineNumber) {
 							this.replaceSpecifyLineNumberAndIdMap(curRange, decoration);
 						} else if (preRange) {
-							const isPaste = e.reason === CursorChangeReason.Paste;
-							const lineBreakInHead =
-								!isPaste &&
-								preRange.endColumn === curRange.endColumn &&
-								preRange.endLineNumber !== curRange.endLineNumber &&
-								preRange.startLineNumber === curRange.startLineNumber;
-
-							/**
-							 * FIXME: 在光标处于行头时粘贴代码时断点位置不正确
-							 */
+							const lineBreakInHead = this.checkIfLineBreakInHead(e, curRange, preRange);
 
 							this.removeSpecifyDecoration(decoration.id, preRange.startLineNumber);
 							this.createSpecifyDecoration({
@@ -175,6 +169,7 @@ export default class MonacoBreakpoint {
 
 			this.isUndoing = false;
 			this.isLineCountChanged = false;
+			this.lineContent = this.getLineContentAtPosition(e.position);
 		});
 	}
 
@@ -283,6 +278,55 @@ export default class MonacoBreakpoint {
 		}
 
 		this.lineNumberAndDecorationIdMap.set(curRange.startLineNumber, decoration.id);
+	}
+
+	/**
+	 * 
+	 * @param position monaco.IPosition
+	 * @param needFullContent if set true, return the full line content from column 1
+	 * @returns 
+	 */
+	private getLineContentAtPosition(position: Position, needFullContent: boolean = true) {
+		const model = this.getModel();
+
+		if (model) {
+			const { lineNumber, column } = position;
+
+			return model.getValueInRange({
+				startLineNumber: lineNumber,
+				endLineNumber: lineNumber,
+				startColumn: needFullContent ? 1 : column,
+				endColumn: model.getLineLength(lineNumber) + 1
+			}).trim();
+		}
+		return '';
+	}
+
+	/**
+	 * @description when decoration changed, check if line break in head.
+	 * @returns Boolean
+	 */
+	private checkIfLineBreakInHead(e: CursorPositionChangedEvent, curRange: Range, preRange: Range) {
+		const { reason, position } = e;
+		const isPaste = reason === CursorChangeReason.Paste;
+		const lineContent = this.getLineContentAtPosition(position, false);
+
+		let lineBreakInHead =
+			!isPaste && 
+			preRange.endColumn === curRange.endColumn &&
+			preRange.startColumn === curRange.startColumn &&
+			preRange.endLineNumber !== curRange.endLineNumber &&
+			preRange.startLineNumber === curRange.startLineNumber;
+
+		/**
+		 * if pasted and lineContent in current cursor position equals to this.lineContent (preLineContent),
+		 * indicate paste in pre lineContent head.
+		 */
+		if (isPaste && lineContent === this.lineContent) {
+			lineBreakInHead = true;
+		}
+
+		return lineBreakInHead;
 	}
 
 	dispose() {
