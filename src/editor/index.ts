@@ -1,9 +1,12 @@
 import * as monaco from 'monaco-editor';
 
 const democode = [
-	'functino foo() {\n',
+	'function foo() {\n',
 	'\treturn 1;\n',
-	'}\n'
+	'}\n',
+	'function bar() {\n',
+	'\treturn 1;\n',
+	'}',
 ].join('')
 
 export function createEditor(id: string) {

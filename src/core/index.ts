@@ -39,11 +39,6 @@ export default class MonacoBreakpoint {
 			throw new Error("Missing 'editor' parameter");
 		}
 
-		/**
-		 * TODO: 需要对传入的参数做类型校验，
-		 * 如果类型不正确，就抛出错误
-		 */
-
 		const { editor } = params;
 
 		this.editor = editor;
@@ -160,6 +155,12 @@ export default class MonacoBreakpoint {
 						this.replaceSpecifyLineNumberAndIdMap(curRange, decoration);
 					}
 				}
+				
+				/**
+				 * FIXME:
+				 * 1. 删除携带断点的行，之后回撤代码，断点显示不正确
+				 * 2. 打几个断点，删除全部代码，之后粘贴代码，断点显示不正确
+				 */
 			} else {
 				// if there is no line break, update the latest decoration range
 				for (let decoration of decorations) {
@@ -268,9 +269,18 @@ export default class MonacoBreakpoint {
 	}
 
 	private replaceSpecifyLineNumberAndIdMap(curRange: Range, decoration: ModelDecoration) {
+		for (let [decorationId, range] of this.decorationIdAndRangeMap) {
+			// remove duplicated range in map
+			if (JSON.stringify(range) === JSON.stringify(decoration.range)) {
+				this.decorationIdAndRangeMap.delete(decorationId);
+				break;
+			}
+		}
+		
 		this.decorationIdAndRangeMap.set(decoration.id, decoration.range);
 
 		for (let [lineNumber, decorationId] of this.lineNumberAndDecorationIdMap) {
+			// remove duplicated range in map
 			if (decorationId === decoration.id) {
 				this.lineNumberAndDecorationIdMap.delete(lineNumber);
 				break;
