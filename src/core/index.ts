@@ -133,13 +133,25 @@ export default class MonacoBreakpoint {
 					const curRange = decoration.range;
 					const preRange = this.decorationIdAndRangeMap.get(decoration.id);
 
-					if (!this.isUndoing) {
+					if (
+						!this.isUndoing ||
+						(this.isUndoing && curRange.startLineNumber !== curRange.endLineNumber)
+					) {
+						/**
+						 * if startLineNumber equals to endLineNumber,
+						 * only need to update the record map (decorationIdAndRangeMap & lineNumberAndDecorationIdMap)
+						 */
 						if (curRange.startLineNumber === curRange.endLineNumber) {
 							this.replaceSpecifyLineNumberAndIdMap(curRange, decoration);
 						} else if (preRange) {
 							const lineBreakInHead = this.checkIfLineBreakInHead(e, curRange, preRange);
 
+							// remove old decoration before re render the new breakpoint decoration
 							this.removeSpecifyDecoration(decoration.id, preRange.startLineNumber);
+							/**
+							 * if line break in head, render the breakpoint decoration in endLineNumber,
+							 * else render in startLineNumber
+							 */
 							this.createSpecifyDecoration({
 								...curRange,
 								...(lineBreakInHead ? {
@@ -155,18 +167,17 @@ export default class MonacoBreakpoint {
 						this.replaceSpecifyLineNumberAndIdMap(curRange, decoration);
 					}
 				}
-				
-				/**
-				 * FIXME:
-				 * 1. 删除携带断点的行，之后回撤代码，断点显示不正确
-				 * 2. 打几个断点，删除全部代码，之后粘贴代码，断点显示不正确
-				 */
 			} else {
-				// if there is no line break, update the latest decoration range
+				/**
+				 * there is no line break and startLineNumber equals to endLineNumber,
+				 * only need to update the record map (decorationIdAndRangeMap & lineNumberAndDecorationIdMap)
+				 */
 				for (let decoration of decorations) {
 					this.decorationIdAndRangeMap.set(decoration.id, decoration.range);
 				}
 			}
+
+			this.removeExtraDecoration();
 
 			this.isUndoing = false;
 			this.isLineCountChanged = false;
@@ -228,8 +239,23 @@ export default class MonacoBreakpoint {
 		this.removeHoverDecoration();
 	}
 
+	/**
+	 * remove extra decoration after re render new breakpoint decoration
+	 */
+	private removeExtraDecoration() {
+		const model = this.getModel();
+		const decorations = this.getAllDecorations();
+
+		for (let decoration of decorations) {
+			if (!this.decorationIdAndRangeMap.has(decoration.id)) {
+				model?.deltaDecorations([decoration.id], []);
+			}
+		}
+	}
+
 	private removeSpecifyDecoration(decorationId: string, lineNumber: number) {
-		this.editor?.removeDecorations([decorationId]);
+		const model = this.getModel();
+		model?.deltaDecorations([decorationId], []);
 		this.decorationIdAndRangeMap.delete(decorationId);
 		this.lineNumberAndDecorationIdMap.delete(lineNumber);
 	}
@@ -328,11 +354,22 @@ export default class MonacoBreakpoint {
 			preRange.endLineNumber !== curRange.endLineNumber &&
 			preRange.startLineNumber === curRange.startLineNumber;
 
-		/**
-		 * if pasted and lineContent in current cursor position equals to this.lineContent (preLineContent),
-		 * indicate paste in pre lineContent head.
-		 */
-		if (isPaste && lineContent === this.lineContent) {
+		if (
+			/**
+			 * if pasted and lineContent in current cursor position equals to this.lineContent (preLineContent),
+			 * indicate paste in pre lineContent head.
+			 */
+			(isPaste && lineContent === this.lineContent) ||
+			/**
+			 * if isUndoing && startLineNumber not equals endLineNumber,
+			 * re render the breakpoint decoration in endLineNumber
+			 */
+			(
+				!isPaste &&
+				this.isUndoing &&
+				curRange.startLineNumber !== curRange.endLineNumber
+			)
+		) {
 			lineBreakInHead = true;
 		}
 
