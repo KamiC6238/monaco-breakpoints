@@ -6,6 +6,8 @@ import {
 	BreakpointEnum,
 	ModelDecoration,
 	EditorMouseEvent,
+	EditorMouseTarget,
+	ModelDeltaDecoration,
 	MonacoBreakpointProps,
 	CursorPositionChangedEvent
 } from '@/types';
@@ -13,9 +15,9 @@ import {
 import {
 	MouseTargetType,
 	CursorChangeReason,
-	BREAKPOINT_OPTIONS
+	BREAKPOINT_OPTIONS,
+	BREAKPOINT_HOVER_OPTIONS
 } from '@/config';
-import { getMouseEventTarget, createBreakpointDecoration } from '@/utils';
 
 export default class MonacoBreakpoint {
 	private preLineCount = 0;
@@ -51,7 +53,7 @@ export default class MonacoBreakpoint {
 		this.mouseMoveDisposable = this.editor!.onMouseMove(
 			(e: EditorMouseEvent) => {
 				const model = this.getModel();
-				const { range, detail, type } = getMouseEventTarget(e);
+				const { range, detail, type } = this.getMouseEventTarget(e);
 
 				// This indicates that the current position of the mouse is over the total number of lines in the editor
 				if (detail?.isAfterLines) {
@@ -64,7 +66,7 @@ export default class MonacoBreakpoint {
 					this.removeHoverDecoration();
 
 					// create new hover breakpoint decoration
-					const newDecoration = createBreakpointDecoration(
+					const newDecoration = this.createBreakpointDecoration(
 						range,
 						BreakpointEnum.Hover
 					);
@@ -85,7 +87,7 @@ export default class MonacoBreakpoint {
 		this.mouseDownDisposable = this.editor!.onMouseDown(
 			(e: EditorMouseEvent) => {
 				const model = this.getModel();
-				const { type, range, detail, position } = getMouseEventTarget(e);
+				const { type, range, detail, position } = this.getMouseEventTarget(e);
 
 				if (model && type === MouseTargetType.GUTTER_GLYPH_MARGIN) {
 					// This indicates that the current position of the mouse is over the total number of lines in the editor
@@ -205,6 +207,10 @@ export default class MonacoBreakpoint {
 		return this.getModel()?.getLineCount() ?? 0;
 	}
 
+	private getMouseEventTarget(e: EditorMouseEvent) {
+		return { ...(e.target as EditorMouseTarget) };
+	}
+
 	private getLineDecoration(lineNumber: number) {
 		return (
 			this.getModel()
@@ -282,7 +288,7 @@ export default class MonacoBreakpoint {
 			 * it indicates that the current action is to add a breakpoint.
 			 * create breakpoint decoration
 			 */
-			const newDecoration = createBreakpointDecoration(
+			const newDecoration = this.createBreakpointDecoration(
 				range,
 				BreakpointEnum.Exist
 			);
@@ -305,6 +311,19 @@ export default class MonacoBreakpoint {
 				this.decorationIdAndRangeMap.set(newDecorationId, decoration.range);
 			}
 		}
+	}
+
+	private createBreakpointDecoration(
+		range: Range,
+		breakpointEnum: BreakpointEnum
+	): ModelDeltaDecoration {
+		return {
+			range,
+			options:
+				breakpointEnum === BreakpointEnum.Exist
+					? BREAKPOINT_OPTIONS
+					: BREAKPOINT_HOVER_OPTIONS,
+		};
 	}
 
 	private replaceSpecifyLineNumberAndIdMap(curRange: Range, decoration: ModelDecoration) {
