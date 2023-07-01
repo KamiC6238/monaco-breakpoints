@@ -114,6 +114,7 @@ export default class MonacoBreakpoint {
 	private initEditorEvent() {
 		this.preLineCount = this.getLineCount();
 
+		// Execute onDidChangeModelContent callback first
 		this.contentChangedDisposable?.dispose();
 		this.contentChangedDisposable = this.editor!.onDidChangeModelContent((e) => {
 			const curLineCount = this.getLineCount();
@@ -123,6 +124,7 @@ export default class MonacoBreakpoint {
 			this.preLineCount = curLineCount;
 		});
 
+		// Execute onDidChangeCursorPosition callback second
 		this.cursorPositionChangedDisposable?.dispose();
 		this.cursorPositionChangedDisposable = this.editor!.onDidChangeCursorPosition(e => {
 			const model = this.getModel();
@@ -177,10 +179,20 @@ export default class MonacoBreakpoint {
 				}
 			}
 
+			/**
+			 * remove extra decoration which not in
+			 */
 			this.removeExtraDecoration();
 
+			/**
+			 * reset isUndoing && isLineCountChanged status
+			 */
 			this.isUndoing = false;
 			this.isLineCountChanged = false;
+			/**
+			 * In order to judge that the change of the code starts from the beginning of the line,
+			 * record the text of the line where the current cursor is located
+			 */
 			this.lineContent = this.getLineContentAtPosition(e.position);
 		});
 	}
@@ -240,7 +252,8 @@ export default class MonacoBreakpoint {
 	}
 
 	/**
-	 * remove extra decoration after re render new breakpoint decoration
+	 * Remove extra decoration after re render new breakpoint decoration,
+	 * The purpose is to synchronize with decorationIdAndRangeMap & lineNumberAndDecorationIdMap
 	 */
 	private removeExtraDecoration() {
 		const model = this.getModel();
