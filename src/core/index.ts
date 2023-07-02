@@ -137,10 +137,14 @@ export default class MonacoBreakpoint {
 					const curRange = decoration.range;
 					const preRange = this.decorationIdAndRangeMap.get(decoration.id);
 
-					if (
-						!this.isUndoing ||
-						(this.isUndoing && curRange.startLineNumber !== curRange.endLineNumber)
-					) {
+					const isPaste = e.reason === CursorChangeReason.Paste;
+					// vscode breakpoint logic
+					const needRenderDecorationInEndLineNumber =
+						!isPaste &&
+						this.isUndoing &&
+						curRange.startLineNumber !== curRange.endLineNumber
+
+					if (!this.isUndoing || needRenderDecorationInEndLineNumber) {
 						/**
 						 * if startLineNumber equals to endLineNumber,
 						 * only need to update the record map (decorationIdAndRangeMap & lineNumberAndDecorationIdMap)
@@ -154,11 +158,12 @@ export default class MonacoBreakpoint {
 							this.removeSpecifyDecoration(decoration.id, preRange.startLineNumber);
 							/**
 							 * if line break in head, render the breakpoint decoration in endLineNumber,
+							 * if current line has breakpoint decoration & isUndoing & not paste & cur startLineNumber & cur endLineNumber
 							 * else render in startLineNumber
 							 */
 							this.createSpecifyDecoration({
 								...curRange,
-								...(lineBreakInHead ? {
+								...(lineBreakInHead || needRenderDecorationInEndLineNumber ? {
 									startLineNumber: curRange.endLineNumber,
 									endColumn: model.getLineLength(curRange.endLineNumber) + 1
 								} : {
@@ -386,22 +391,11 @@ export default class MonacoBreakpoint {
 			preRange.endLineNumber !== curRange.endLineNumber &&
 			preRange.startLineNumber === curRange.startLineNumber;
 
-		if (
-			/**
-			 * if pasted and lineContent in current cursor position equals to this.lineContent (preLineContent),
-			 * indicate paste in pre lineContent head.
-			 */
-			(isPaste && lineContent === this.lineContent) ||
-			/**
-			 * if isUndoing && startLineNumber not equals endLineNumber,
-			 * re render the breakpoint decoration in endLineNumber
-			 */
-			(
-				!isPaste &&
-				this.isUndoing &&
-				curRange.startLineNumber !== curRange.endLineNumber
-			)
-		) {
+		/**
+		 * if pasted and lineContent in current cursor position equals to this.lineContent (preLineContent),
+		 * indicate paste in pre lineContent head.
+		 */
+		if (isPaste && lineContent === this.lineContent) {
 			lineBreakInHead = true;
 		}
 
