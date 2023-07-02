@@ -1,5 +1,6 @@
 {
-  "name": "monaco-breakpoints-plugin",
+  "name": "monaco-breakpoints",
+  "description": "A library for support breakpoints in monaco-editor.",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,6 +8,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
+  },
+  "peerDependencies": {
+    "monaco-editor": "^0.39.0"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
