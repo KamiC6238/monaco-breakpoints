@@ -402,6 +402,27 @@ export default class MonacoBreakpoint {
 		return lineBreakInHead;
 	}
 
+	/**
+	 * @returns The set of line numbers where the breakpoint is located
+	 */
+	getBreakpoints() {
+		const breakpoints: number[] = [];
+
+		for (let [lineNumber, _] of this.lineNumberAndDecorationIdMap) {
+			breakpoints.push(lineNumber);
+		}
+		return breakpoints;
+	}
+
+	/**
+	 * @returns Remove all breakpoints
+	 */
+	clearBreakpoints() {
+		this.removeAllDecorations();
+		this.decorationIdAndRangeMap.clear();
+		this.lineNumberAndDecorationIdMap.clear();
+	}
+
 	dispose() {
 		this.editor = null;
 		this.preLineCount = 0;
