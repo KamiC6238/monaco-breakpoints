@@ -1,9 +1,13 @@
 {
   "name": "monaco-breakpoints",
   "description": "A library for support breakpoints in monaco-editor.",
+  "repository": "https://github.com/KamiC6238/monaco-breakpoints",
+  "license": "MIT",
+  "author": "KamiC6238",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0-beta.0",
   "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -12,6 +16,7 @@
   "peerDependencies": {
     "monaco-editor": "^0.39.0"
   },
+  "files": ["dist", "package.json", "README.md"],
   "devDependencies": {
     "@types/node": "^20.3.1",
     "monaco-editor": "^0.39.0",
