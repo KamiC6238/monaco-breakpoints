@@ -6,7 +6,18 @@ export default defineConfig({
 		lib: {
 			entry: path.resolve(__dirname, './src/main.ts'),
 			name: 'index',
-			fileName: 'index'
+			fileName: (format, entryName: string) => {
+				const fileSuffix = `${
+					format === 'es'
+						? 'js' 
+						: format === 'cjs'
+							? 'cjs' 
+							: 'umd.js'
+				}`;
+
+				return `${entryName}/${format}/index.${fileSuffix}`;
+			},
+			formats: ['es', 'cjs', 'umd']
 		},
 		rollupOptions: {
 			external: ['monaco-editor'],

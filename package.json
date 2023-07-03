@@ -7,7 +7,14 @@
   "private": true,
   "version": "0.1.0-beta.0",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "./dist/main/cjs/index.cjs",
+  "module": "./dist/main/es/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/main/es/index.js",
+      "require": "./dist/main/cjs/index.cjs"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
