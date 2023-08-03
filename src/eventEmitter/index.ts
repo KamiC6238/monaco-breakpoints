@@ -1,4 +1,4 @@
-type Handler<T = any> = (data: T) => void;
+import { Handler } from '@/types';
 
 export class EventEmitter<T extends Record<string, any>> {
     private eventsMap: Map<keyof T, Set<Handler>> = new Map();

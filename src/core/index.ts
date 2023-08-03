@@ -1,11 +1,13 @@
 import {
 	Range,
+	Handler,
 	Position,
 	Disposable,
 	MonacoEditor,
 	BreakpointEnum,
 	ModelDecoration,
 	EditorMouseEvent,
+	BreakpointEvents,
 	EditorMouseTarget,
 	ModelDeltaDecoration,
 	MonacoBreakpointProps,
@@ -19,10 +21,13 @@ import {
 	BREAKPOINT_HOVER_OPTIONS
 } from '@/config';
 
+import { EventEmitter } from '@/eventEmitter';
+
 export default class MonacoBreakpoint {
 	private preLineCount = 0;
 	private hoverDecorationId = '';
 	private editor: MonacoEditor | null = null;
+	private eventEmitter = new EventEmitter<BreakpointEvents>();
 	
 	private isUndoing = false;
 	private isLineCountChanged = false;
@@ -282,6 +287,7 @@ export default class MonacoBreakpoint {
 		model?.deltaDecorations([decorationId], []);
 		this.decorationIdAndRangeMap.delete(decorationId);
 		this.lineNumberAndDecorationIdMap.delete(lineNumber);
+		this.emitBreakpointChanged();
 	}
 
 	private createSpecifyDecoration(range: Range) {
@@ -308,6 +314,7 @@ export default class MonacoBreakpoint {
 				range.endLineNumber,
 				newDecorationId
 			);
+			this.emitBreakpointChanged();
 
 			// record the new decoration
 			const decoration = this.getLineDecoration(range.endLineNumber);
@@ -351,6 +358,7 @@ export default class MonacoBreakpoint {
 		}
 
 		this.lineNumberAndDecorationIdMap.set(curRange.startLineNumber, decoration.id);
+		this.emitBreakpointChanged();
 	}
 
 	/**
@@ -400,6 +408,22 @@ export default class MonacoBreakpoint {
 		}
 
 		return lineBreakInHead;
+	}
+
+	private emit<T extends keyof BreakpointEvents>(event: T, data: BreakpointEvents[T]) {
+		this.eventEmitter.emit(event, data);
+	}
+
+	private emitBreakpointChanged() {
+		this.emit('breakpointChanged', this.getBreakpoints());
+	}
+
+	on<T extends keyof BreakpointEvents>(event: T, handler: Handler<BreakpointEvents[T]>) {
+		this.eventEmitter.on(event, handler);
+	}
+
+	off<T extends keyof BreakpointEvents>(event: T, handler: Handler<BreakpointEvents[T]>) {
+		this.eventEmitter.off(event, handler);
 	}
 
 	/**

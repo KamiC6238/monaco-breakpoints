@@ -24,3 +24,9 @@ export enum BreakpointEnum {
 export interface MonacoBreakpointProps {
 	editor: MonacoEditor;
 }
+
+export type Handler<T = any> = (data: T) => void;
+
+export interface BreakpointEvents {
+	breakpointChanged: number[];
+}

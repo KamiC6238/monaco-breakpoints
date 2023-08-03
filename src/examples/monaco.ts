@@ -22,4 +22,8 @@ const editor = monaco.editor.create(document.getElementById('app')!, {
     glyphMargin: true,
 });
 
-new MonacoBreakpoint({ editor });
+const instance = new MonacoBreakpoint({ editor });
+
+instance.on('breakpointChanged', breakpoints => {
+    console.log('breakpointChanged: ', breakpoints);
+})
