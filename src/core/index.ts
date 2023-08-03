@@ -438,9 +438,7 @@ export default class MonacoBreakpoint {
 		return breakpoints;
 	}
 
-	/**
-	 * @returns Remove all breakpoints
-	 */
+	// Remove all breakpoints
 	clearBreakpoints() {
 		this.removeAllDecorations();
 		this.decorationIdAndRangeMap.clear();
