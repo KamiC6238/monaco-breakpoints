@@ -6,9 +6,10 @@ import path from 'path';
 export default defineConfig({
 	build: {
 		lib: {
-			entry: path.resolve(__dirname, './src/main.ts'),
+			entry: path.resolve(__dirname, './src/index.ts'),
 			name: 'index',
-			fileName: (format, entryName: string) => {
+			fileName: 'index',
+			// fileName: (format, entryName: string) => {
 				// const fileSuffix = `${
 				// 	format === 'es'
 				// 		? 'js' 
@@ -16,22 +17,22 @@ export default defineConfig({
 				// 			? 'cjs' 
 				// 			: 'umd.js'
 				// }`;
-				return `${entryName}/${format}/index.js`;
-			},
+				// return `${format}/index.js`;
+			// },
 			// formats: ['es', 'cjs', 'umd']
 			formats: ['es'],
 		},
 		rollupOptions: {
 			external: ['monaco-editor'],
-			output: {
-				assetFileNames: ({name}) => {
-					// fix css output path
-					if (/\.css$/.test(name ?? '')) {
-						return 'main/es/[name][extname]';   
-					}
-					return '[name][extname]'
-				}
-			}
+			// output: {
+				// assetFileNames: ({name}) => {
+				// 	// fix css output path
+				// 	if (/\.css$/.test(name ?? '')) {
+				// 		return 'es/[name][extname]';   
+				// 	}
+				// 	return '[name][extname]'
+				// }
+			// }
 		},
 		outDir: path.resolve(__dirname, 'dist')
 	},
