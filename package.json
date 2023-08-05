@@ -36,5 +36,8 @@
     "vite": "^4.3.9",
     "vite-plugin-dts": "^3.5.0",
     "vite-plugin-libcss": "^1.1.1"
+  },
+  "dependencies": {
+    "monaco-breakpoints": "^0.1.0"
   }
 }
