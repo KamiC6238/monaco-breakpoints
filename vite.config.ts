@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
 import path from 'path';
 
 export default defineConfig({
@@ -31,12 +32,13 @@ export default defineConfig({
 		},
 		outDir: path.resolve(__dirname, 'dist')
 	},
+	plugins: [dts()],
 	resolve: {
 		alias: [
-			{
-				find: 'monaco-editor',
-				replacement: 'monaco-editor/esm/vs/editor/editor.api.js',
-			},
+			// {
+			// 	find: 'monaco-editor',
+			// 	replacement: 'monaco-editor/esm/vs/editor/editor.api.js',
+			// },
 			{
 				find: '@',
 				replacement: path.resolve(__dirname, 'src'),
