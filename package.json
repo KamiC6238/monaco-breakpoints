@@ -4,15 +4,14 @@
   "repository": "https://github.com/KamiC6238/monaco-breakpoints",
   "license": "MIT",
   "author": "KamiC6238",
-  "version": "0.1.0-beta.4",
+  "version": "0.1.0-beta.5",
   "type": "module",
-  "main": "./dist/main/es/index.js",
-  "module": "./dist/main/es/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "exports": {
     ".": {
-      "import": "./dist/main/es/index.js",
-      "types": "./dist/main/es/index.d.ts",
-      "require": "./dist/main/cjs/index.cjs"
+      "import": "./dist/index.js",
+      "types": "./dist/main/es/index.d.ts"
     }
   },
   "scripts": {
@@ -33,6 +32,7 @@
     "monaco-editor": "^0.39.0",
     "typescript": "^5.0.2",
     "vite": "^4.3.9",
-    "vite-plugin-dts": "^3.5.0"
+    "vite-plugin-dts": "^3.5.0",
+    "vite-plugin-libcss": "^1.1.1"
   }
 }

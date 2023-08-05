@@ -22,6 +22,7 @@ import {
 } from '@/config';
 
 import { EventEmitter } from '@/eventEmitter';
+import '@/style/index.css';
 
 export default class MonacoBreakpoint {
 	private preLineCount = 0;
