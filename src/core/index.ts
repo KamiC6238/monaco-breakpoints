@@ -12,7 +12,7 @@ import {
 	ModelDeltaDecoration,
 	MonacoBreakpointProps,
 	CursorPositionChangedEvent
-} from '@/types';
+} from '../types';
 
 import {
 	MouseTargetType,

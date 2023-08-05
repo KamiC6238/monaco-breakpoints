@@ -1,4 +1,4 @@
-import { ModelDecorationOptions } from '@/types';
+import { ModelDecorationOptions } from '../types';
 import * as monaco from 'monaco-editor';
 
 export const MouseTargetType = monaco.editor.MouseTargetType;

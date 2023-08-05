@@ -1,4 +1,4 @@
-import { Handler } from '@/types';
+import { Handler } from '../types';
 
 export class EventEmitter<BreakpointEvents extends Record<string, any>> {
     private eventsMap: Map<keyof BreakpointEvents, Set<Handler>> = new Map();
