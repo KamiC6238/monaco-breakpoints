@@ -1,6 +1,6 @@
 # monaco-breakpoints
 
-## Support breakpoints in monaco-editor like vscode
+## A typesafe library support breakpoints in monaco-editor like vscode
 
 ## Installing
 ```
@@ -38,6 +38,9 @@ instance.on('breakpointChanged', breakpoints => {
     console.log('breakpointChanged: ', breakpoints);
 })
 ```
+
+## Packages
+Please make sure your `monaco-editor` version is greater than or equal to `0.39.0`.
 
 ## example
 https://codesandbox.io/p/sandbox/lingering-frost-53pjww?file=%2Fsrc%2FApp.vue%3A8%2C9
