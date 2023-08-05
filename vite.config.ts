@@ -16,14 +16,22 @@ export default defineConfig({
 				// 			? 'cjs' 
 				// 			: 'umd.js'
 				// }`;
-				// return `${entryName}/${format}/index.${fileSuffix}`;
-				return `index.js`;
+				return `${entryName}/${format}/index.js`;
 			},
 			// formats: ['es', 'cjs', 'umd']
-			formats: ['es']
+			formats: ['es'],
 		},
 		rollupOptions: {
-			external: ['monaco-editor']
+			external: ['monaco-editor'],
+			output: {
+				assetFileNames: ({name}) => {
+					// fix css output path
+					if (/\.css$/.test(name ?? '')) {
+						return 'main/es/[name][extname]';   
+					}
+					return '[name][extname]'
+				}
+			}
 		},
 		outDir: path.resolve(__dirname, 'dist')
 	},
