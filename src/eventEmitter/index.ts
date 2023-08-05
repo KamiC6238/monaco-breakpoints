@@ -1,14 +1,14 @@
 import { Handler } from '@/types';
 
-export class EventEmitter<T extends Record<string, any>> {
-    private eventsMap: Map<keyof T, Set<Handler>> = new Map();
+export class EventEmitter<BreakpointEvents extends Record<string, any>> {
+    private eventsMap: Map<keyof BreakpointEvents, Set<Handler>> = new Map();
 
     /**
      * @description subscribe event with handler
      * @param event event name
      * @param handler event handler
      */
-    on<K extends keyof T>(event: K, handler: Handler<T[K]>) {
+    on<K extends keyof BreakpointEvents>(event: K, handler: Handler<BreakpointEvents[K]>) {
         let handlers = this.eventsMap.get(event);
 
         if (!handlers) {
@@ -24,10 +24,10 @@ export class EventEmitter<T extends Record<string, any>> {
      * @param event event name
      * @param handler event handler
      */
-    once<K extends keyof T>(event: K, handler: Handler<T[K]>) {
+    once<K extends keyof BreakpointEvents>(event: K, handler: Handler<BreakpointEvents[K]>) {
         const that = this;
 
-        function _once(args: T[K]) {
+        function _once(args: BreakpointEvents[K]) {
             handler(args);
             that.off(event, _once);
         }
@@ -40,7 +40,7 @@ export class EventEmitter<T extends Record<string, any>> {
      * @param event event name
      * @param args event handler arguments
      */
-    emit<K extends keyof T>(event: K, args: T[K]) {
+    emit<K extends keyof BreakpointEvents>(event: K, args: BreakpointEvents[K]) {
         const handlers = this.eventsMap.get(event);
 
         if (handlers) {
@@ -55,7 +55,7 @@ export class EventEmitter<T extends Record<string, any>> {
      * @param event event name
      * @param handler event handler need unsubscribe
      */
-    off<K extends keyof T>(event: K, handler?: Handler<T[K]>) {
+    off<K extends keyof BreakpointEvents>(event: K, handler?: Handler<BreakpointEvents[K]>) {
         const handlers = this.eventsMap.get(event);
 
         if (handlers) {

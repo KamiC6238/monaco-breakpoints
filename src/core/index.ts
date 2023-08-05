@@ -27,7 +27,7 @@ export default class MonacoBreakpoint {
 	private preLineCount = 0;
 	private hoverDecorationId = '';
 	private editor: MonacoEditor | null = null;
-	private eventEmitter = new EventEmitter<BreakpointEvents>();
+	private eventEmitter = new EventEmitter();
 	
 	private isUndoing = false;
 	private isLineCountChanged = false;
