@@ -4,7 +4,7 @@
   "repository": "https://github.com/KamiC6238/monaco-breakpoints",
   "license": "MIT",
   "author": "KamiC6238",
-  "version": "0.1.0-beta.0",
+  "version": "0.1.0-beta.1",
   "type": "module",
   "main": "./dist/main/cjs/index.cjs",
   "module": "./dist/main/es/index.js",
