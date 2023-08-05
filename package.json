@@ -1,9 +1,11 @@
 {
   "name": "monaco-breakpoints",
   "description": "A library for support breakpoints in monaco-editor.",
-  "repository": "https://github.com/KamiC6238/monaco-breakpoints",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KamiC6238/monaco-breakpoints"
+  },
   "license": "MIT",
-  "author": "KamiC6238",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
