@@ -39,6 +39,8 @@ instance.on('breakpointChanged', breakpoints => {
 })
 ```
 
+![](https://github.com/KamiC6238/monaco-breakpoints/blob/main/public/demo.png)
+
 ## Packages
 Please make sure your `monaco-editor` version is greater than or equal to `0.39.0`.
 
