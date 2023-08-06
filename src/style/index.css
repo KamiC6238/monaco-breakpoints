@@ -15,3 +15,7 @@
     margin: 4px 0 0 8px;
     cursor: pointer;
 }
+
+.monaco-line-highlight {
+    background-color: rgba(245, 240, 187, 0.5);
+}

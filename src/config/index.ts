@@ -11,3 +11,8 @@ export const BREAKPOINT_OPTIONS: ModelDecorationOptions = {
 export const BREAKPOINT_HOVER_OPTIONS: ModelDecorationOptions = {
 	glyphMarginClassName: 'monaco-hover-breakpoint',
 };
+
+export const HIGHLIGHT_OPTIONS: ModelDecorationOptions = {
+	isWholeLine: true,
+	className: 'monaco-line-highlight',
+}

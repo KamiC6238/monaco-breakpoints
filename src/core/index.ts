@@ -17,6 +17,7 @@ import {
 import {
 	MouseTargetType,
 	CursorChangeReason,
+	HIGHLIGHT_OPTIONS,
 	BREAKPOINT_OPTIONS,
 	BREAKPOINT_HOVER_OPTIONS
 } from '@/config';
@@ -27,6 +28,7 @@ import '@/style/index.css';
 export default class MonacoBreakpoint {
 	private preLineCount = 0;
 	private hoverDecorationId = '';
+	private highlightDecorationId = '';
 	private editor: MonacoEditor | null = null;
 	private eventEmitter = new EventEmitter();
 	
@@ -251,8 +253,17 @@ export default class MonacoBreakpoint {
 
 		if (model && this.hoverDecorationId) {
 			model.deltaDecorations([this.hoverDecorationId], []);
-			this.hoverDecorationId = '';
 		}
+		this.hoverDecorationId = '';
+	}
+
+	private removeHighlightDecoration() {
+		const model = this.getModel();
+
+		if (model && this.highlightDecorationId) {
+			model.deltaDecorations([this.highlightDecorationId], []);
+		}
+		this.highlightDecorationId = '';
 	}
 
 	private removeAllDecorations() {
@@ -428,6 +439,41 @@ export default class MonacoBreakpoint {
 	}
 
 	/**
+	 * @description set background highlight for lineNumber
+	 * @param lineNumber 
+	 */
+	setLineHighlight(lineNumber: number) {
+		const model = this.getModel();
+
+		if (model) {
+			if (model.getLineCount() < lineNumber) {
+				throw Error('The lineNumber is greater than the total lineNumber');
+			}
+
+			this.removeHighlightDecoration();
+
+			const decorationIds = model.deltaDecorations([], [{
+				options: HIGHLIGHT_OPTIONS,
+				range: {
+					startLineNumber: lineNumber,
+					startColumn: 1,
+					endLineNumber: lineNumber,
+					endColumn: 999
+				}
+			}]);
+
+			this.highlightDecorationId = decorationIds[0];
+		}
+	}
+
+	/**
+	 * @description remove the exist highlight line
+	 */
+	removeHighlight() {
+		this.removeHighlightDecoration();
+	}
+
+	/**
 	 * @returns The set of line numbers where the breakpoint is located
 	 */
 	getBreakpoints() {
@@ -452,10 +498,11 @@ export default class MonacoBreakpoint {
 		this.editor = null;
 		this.preLineCount = 0;
 		this.isUndoing = false;
-		this.hoverDecorationId = '';
 		this.isLineCountChanged = false;
 
 		this.removeAllDecorations();
+		this.removeHoverDecoration();
+		this.removeHighlightDecoration();
 
 		this.mouseMoveDisposable?.dispose();
 		this.mouseDownDisposable?.dispose();

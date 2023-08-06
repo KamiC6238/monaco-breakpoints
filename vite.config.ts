@@ -4,6 +4,7 @@ import libcss from 'vite-plugin-libcss';
 import path from 'path';
 
 export default defineConfig({
+	publicDir: false,
 	build: {
 		lib: {
 			entry: path.resolve(__dirname, './src/index.ts'),
