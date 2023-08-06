@@ -37,9 +37,16 @@ const instance = new MonacoBreakpoint({ editor });
 instance.on('breakpointChanged', breakpoints => {
     console.log('breakpointChanged: ', breakpoints);
 })
+
+// highlight background for the passed line number
+instance.setLineHighlight(1)
+
+// remove the current highlight background
+instance.removeHighlight();
 ```
 
-![](https://github.com/KamiC6238/monaco-breakpoints/blob/main/public/demo.png)
+![](https://github.com/KamiC6238/monaco-breakpoints/blob/main/public/breakpoint.png)
+![](https://github.com/KamiC6238/monaco-breakpoints/blob/main/public/highlight.png)
 
 ## Packages
 Please make sure your `monaco-editor` version is greater than or equal to `0.39.0`.
