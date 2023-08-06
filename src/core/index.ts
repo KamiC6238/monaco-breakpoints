@@ -458,7 +458,7 @@ export default class MonacoBreakpoint {
 					startLineNumber: lineNumber,
 					startColumn: 1,
 					endLineNumber: lineNumber,
-					endColumn: 999
+					endColumn: 1
 				}
 			}]);
 
