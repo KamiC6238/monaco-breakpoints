@@ -1,10 +1,5 @@
 lockfileVersion: '6.0'
 
-dependencies:
-  monaco-breakpoints:
-    specifier: ^0.1.0
-    version: 0.1.0(monaco-editor@0.39.0)
-
 devDependencies:
   '@types/node':
     specifier: ^20.3.1
@@ -614,16 +609,9 @@ packages:
       brace-expansion: 2.0.1
     dev: true
 
-  /monaco-breakpoints@0.1.0(monaco-editor@0.39.0):
-    resolution: {integrity: sha512-LBquXVVtk174fXXQ7WpC3tpUg0+Tpu4Ech+pMQx4f6E83Bl4+on4BugTpXXmKmji+Hi1rYj2M1UGPVJMEb1J8A==}
-    peerDependencies:
-      monaco-editor: ^0.39.0
-    dependencies:
-      monaco-editor: 0.39.0
-    dev: false
-
   /monaco-editor@0.39.0:
     resolution: {integrity: sha512-zhbZ2Nx93tLR8aJmL2zI1mhJpsl87HMebNBM6R8z4pLfs8pj604pIVIVwyF1TivcfNtIPpMXL+nb3DsBmE/x6Q==}
+    dev: true
 
   /ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
