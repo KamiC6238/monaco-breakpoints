@@ -25,6 +25,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
-  "exclude": ["public"]
+  "include": ["src"]
 }
