@@ -1,6 +1,6 @@
 # monaco-breakpoints
 
-## A typesafe library support breakpoints in monaco-editor like vscode
+## A type-safe library support breakpoints in monaco-editor like vscode
 
 ## Installing
 ```
