@@ -1,6 +1,6 @@
 .monaco-hover-breakpoint {
-    width: 10px !important;
-    height: 10px !important;
+    width: 8px !important;
+    height: 8px !important;
     border-radius: 100%;
     background-color: #eabebc;
     margin: 4px 0 0 8px;
@@ -8,8 +8,8 @@
 }
 
 .monaco-breakpoint {
-    width: 10px !important;
-    height: 10px !important;
+    width: 8px !important;
+    height: 8px !important;
     border-radius: 100%;
     background-color: #d47d78;
     margin: 4px 0 0 8px;
