@@ -11,7 +11,8 @@ import {
 	EditorMouseTarget,
 	ModelDeltaDecoration,
 	MonacoBreakpointProps,
-	CursorPositionChangedEvent
+	CursorPositionChangedEvent,
+  HoverMessage
 } from '../types';
 
 import {
@@ -44,14 +45,17 @@ export default class MonacoBreakpoint {
 	private decorationIdAndRangeMap = new Map<string, Range>();
 	private lineNumberAndDecorationIdMap = new Map<number, string>();
 
+  private hoverMessage: HoverMessage | null = null
+
 	constructor(params: MonacoBreakpointProps) {
 		if (!params?.editor) {
 			throw new Error("Missing 'editor' parameter");
 		}
 
-		const { editor } = params;
+		const { editor, hoverMessage = null } = params;
 
 		this.editor = editor;
+    this.hoverMessage = hoverMessage
 		this.initMouseEvent();
 		this.initEditorEvent();
 	}
@@ -61,7 +65,7 @@ export default class MonacoBreakpoint {
 		this.mouseMoveDisposable = this.editor!.onMouseMove(
 			(e: EditorMouseEvent) => {
 				const model = this.getModel();
-				const { range, detail, type } = this.getMouseEventTarget(e);
+				const { range, detail, type, position } = this.getMouseEventTarget(e);
 
 				// This indicates that the current position of the mouse is over the total number of lines in the editor
 				if (detail?.isAfterLines) {
@@ -73,6 +77,10 @@ export default class MonacoBreakpoint {
 					// remove previous hover breakpoint decoration
 					this.removeHoverDecoration();
 
+          if (this.checkIfBreakpointExistInLine(position.lineNumber)) {
+            return
+          }
+
 					// create new hover breakpoint decoration
 					const newDecoration = this.createBreakpointDecoration(
 						range,
@@ -81,7 +89,15 @@ export default class MonacoBreakpoint {
 					// render decoration
 					const decorationIds = model.deltaDecorations(
 						[],
-						[newDecoration]
+						[
+              {
+                range: newDecoration.range,
+                options: {
+                  ...newDecoration.options,
+                  glyphMarginHoverMessage: this.hoverMessage?.unAdded ?? null
+                }
+              }
+            ]
 					);
 					// record the hover decoraion id
 					this.hoverDecorationId = decorationIds[0];
@@ -224,7 +240,7 @@ export default class MonacoBreakpoint {
 		return { ...(e.target as EditorMouseTarget) };
 	}
 
-	private getLineDecoration(lineNumber: number) {
+	private getBreankpointDecorationInLine(lineNumber: number) {
 		return (
 			this.getModel()
 				?.getLineDecorations(lineNumber)
@@ -318,7 +334,15 @@ export default class MonacoBreakpoint {
 			// render decoration
 			const newDecorationId = model.deltaDecorations(
 				[],
-				[newDecoration]
+				[
+          {
+            range: { ...newDecoration.range },
+            options: {
+              ...newDecoration.options,
+              glyphMarginHoverMessage: this.hoverMessage?.added ?? null
+            }
+          }
+        ]
 			)[0];
 
 			// record the new breakpoint decoration id
@@ -329,7 +353,7 @@ export default class MonacoBreakpoint {
 			this.emitBreakpointChanged();
 
 			// record the new decoration
-			const decoration = this.getLineDecoration(range.endLineNumber);
+			const decoration = this.getBreankpointDecorationInLine(range.endLineNumber);
 
 			if (decoration) {
 				this.decorationIdAndRangeMap.set(newDecorationId, decoration.range);
@@ -421,6 +445,17 @@ export default class MonacoBreakpoint {
 
 		return lineBreakInHead;
 	}
+
+  private checkIfBreakpointExistInLine(lineNumber: number) {
+    const decorationInLine = this.getBreankpointDecorationInLine(lineNumber)
+    const decorationIdInLine = this.lineNumberAndDecorationIdMap.get(lineNumber)
+
+    return (
+      decorationInLine &&
+      decorationIdInLine &&
+      decorationInLine.id === decorationIdInLine
+    )
+  }
 
 	private emit<T extends keyof BreakpointEvents>(event: T, data: BreakpointEvents[T]) {
 		this.eventEmitter.emit(event, data);
